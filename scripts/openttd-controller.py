@@ -89,17 +89,36 @@ class DedicatedServerController(object):
 
     def __call__(self):
         self.options, self.args = self.optparse.parse_args()
-        if len(self.args) != 2 or self.args[0] not in ('create', 'load'):
-            self.optparse.print_help()
-            self.quit('Unkown or missing command or directory. '
-                      'See usage.')
 
         if self.options.debug:
             self.logger.setLevel(logging.DEBUG)
             self.log_handler.setLevel(logging.DEBUG)
 
-        self.action = self.args[0]
-        self.directory = self.args[1]
+        if len(self.args) == 2:
+            self.action = self.args[0]
+            self.directory = self.args[1]
+
+        elif len(self.args) == 1 and self.args[0] == 'load':
+            self.action = self.args[0]
+            self.directory = 'game.last'
+
+        elif len(self.args) == 1:
+            self.optparse.print_help()
+            self.quit('Unkown or missing command or directory. '
+                      'See usage.')
+
+        elif len(self.args) == 0:
+            if os.path.exists('game.last'):
+                self.action = 'load'
+                self.directory = 'game.last'
+            else:
+                self.action = 'create'
+                self.directory = 'game.001'
+
+        else:
+            self.optparse.print_help()
+            self.quit('Unkown or missing command or directory. '
+                      'See usage.')
 
         if self.action == 'create':
             self.action_create()
@@ -311,6 +330,11 @@ class ProcessController(object):
         if self.savegame:
             args += ['-g', self.savegame]
 
+        if self.directory != 'game.last':
+            if os.path.exists('game.last'):
+                os.system('rm game.last')
+            os.system('ln -s %s game.last' % self.directory)
+
         cmd = ' '.join(args)
         self.logger.debug('Open process with args: %s' % cmd)
         self.proc = subprocess.Popen(args,
@@ -430,38 +454,6 @@ def save_command(controller, logger, args):
     filenames = filter(lambda name: name.startswith('savegame-') \
                            and name.endswith('.sav'),
                        os.listdir(directory))
-    fix_old_style_filenames = min([len(name.split('-'))
-                                   for name in filenames]) < 4
-
-    if fix_old_style_filenames:
-        # need to fix the old style filnames - we need to recreate
-        # the date order for the purpose
-        dated_filenames = []
-        for name in filenames:
-            basename, ext = os.path.splitext(name)
-            dated_filenames.append((basename.split('-')[-2:], name))
-
-        dated_filenames.sort()
-
-        previous = 0
-        for date, name in dated_filenames:
-            if len(name.split('-')) == 4:
-                # new style - extract the number
-                previous = int(name.split('-')[1])
-            else:
-                # old style - take the next by incrementing previous
-                previous += 1
-                # rename the file
-                new = '-'.join([name.split('-')[0], str(previous)] +
-                               name.split('-')[1:])
-                logger.debug('renaming %s to %s' % (name, new))
-                os.rename(os.path.join(directory, name),
-                          os.path.join(directory, new))
-
-        # get the new filenames
-        filenames = filter(lambda name: name.startswith('savegame-') \
-                               and name.endswith('.sav'),
-                           os.listdir(directory))
 
     # create a number/filename mapping
     savegame_map = {}
@@ -469,7 +461,7 @@ def save_command(controller, logger, args):
         savegame_map[int(name.split('-')[1])] = name
 
     # number for next savegame
-    next = max(savegame_map.keys()) + 1
+    next = savegame_map and max(savegame_map.keys()) + 1 or 1
 
     # invoke a savegame
     stamp = datetime.now().strftime('%Y%m%d-%H%m%S')
