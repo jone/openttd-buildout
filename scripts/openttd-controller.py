@@ -82,6 +82,11 @@ class DedicatedServerController(object):
                                  dest='debug', action='store_true',
                                  help='Debug log level.')
 
+        self.optparse.add_option('-s', '--server',
+                                 dest='server', metavar='FILE',
+                                 help='Path to openttd server executable.',
+                                 default='openttd')
+
     def __call__(self):
         self.options, self.args = self.optparse.parse_args()
         if len(self.args) != 2 or self.args[0] not in ('create', 'load'):
@@ -298,7 +303,7 @@ class ProcessController(object):
     def runserver(self):
         """Starts the dedicated server according to the configuration.
         """
-        args = ['openttd', '-D']
+        args = [self.controller.options.server, '-D']
         if self.startingyear:
             args += ['-t', str(self.startingyear)]
         if self.password:
