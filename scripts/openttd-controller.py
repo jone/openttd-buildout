@@ -19,6 +19,9 @@ except AttributeError:
     sys.exit(0)
 
 
+SCRIPTDIR = os.path.dirname(os.path.abspath(__file__))
+
+
 def threaded(name):
     def _wrap(func):
         def _threader(*args, **kwargs):
@@ -86,6 +89,12 @@ class DedicatedServerController(object):
                                  dest='server', metavar='FILE',
                                  help='Path to openttd server executable.',
                                  default='openttd')
+
+        self.optparse.add_option('-u', '--personal-dir',
+                                 dest='personal_dir',
+                                 help='Persnal directory, where the openttd.cfg '
+                                 'is managed by this script.',
+                                 default=SCRIPTDIR)
 
     def __call__(self):
         self.options, self.args = self.optparse.parse_args()
@@ -209,9 +218,8 @@ class DedicatedServerController(object):
     def load_config(self):
         """Loads the config.
         """
-        scriptdir = os.path.dirname(os.path.abspath(__file__))
-        runtimeconfig = os.path.join(scriptdir, 'openttd.cfg')
-        defaultconfig = os.path.join(scriptdir, 'default.cfg')
+        runtimeconfig = os.path.join(self.options.personal_dir, 'openttd.cfg')
+        defaultconfig = os.path.join(SCRIPTDIR, 'default.cfg')
         gameconfig = os.path.join(self.directory, 'openttd.cfg')
 
         sourceconfig = None
@@ -279,8 +287,7 @@ class DedicatedServerController(object):
     def update_config(self):
         """Update config into game directory on exit.
         """
-        scriptdir = os.path.dirname(os.path.abspath(__file__))
-        runtimeconfig = os.path.join(scriptdir, 'openttd.cfg')
+        runtimeconfig = os.path.join(self.options.personal_dir, 'openttd.cfg')
         gameconfig = os.path.join(self.directory, 'openttd.cfg')
         self.logger.debug('Saving current game config in game directory: '
                           '%s -> %s' % (runtimeconfig, gameconfig))
