@@ -352,12 +352,10 @@ class ProcessController(object):
         self.autosave_cronjob(self.autosave)
 
         def terminate(signum, frame):
-            print '-- SIGNAL HANDLER CALLED WITH %s --' % str(signum)
             quit_command(self, self.logger, '')
 
         signal.signal(signal.SIGTERM, terminate)
         signal.signal(signal.SIGINT, terminate)
-        print '-- SIGNAL HANDLERS SET UP --'
 
         # wait for termination
         while True:
