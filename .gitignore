@@ -1,8 +1,10 @@
-buildout.cfg
-bin/
-src/
-parts/
-var/
 .installed.cfg
-game.*
 autosave*
+bin/
+buildout.cfg
+eggs/
+eggs/
+game.*
+parts/
+src/
+var/
