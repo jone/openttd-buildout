@@ -40,6 +40,12 @@ The default config file will be generated at first openttd startup at
 ``[buildout-directory]var/personal/buildout.cfg``.
 
 
+Dependencies
+------------
+
+* LibLZO (``brew install lzo``)
+
+
 Links
 -----
 
