@@ -298,7 +298,6 @@ class DedicatedServerController(object):
 
     def quit(self, message):
         self.logger.error(message)
-        sys.exit(0)
 
 
 class ProcessController(object):
@@ -456,6 +455,8 @@ def quit_command(controller, logger, args):
     save_command(controller, logger, args)
     controller.send_command('quit')
     controller.running = False
+    time.sleep(5)
+    sys.exit(0)
 
 
 @command(['save', 's'], 'Save current game state.')
